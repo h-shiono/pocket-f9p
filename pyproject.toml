@@ -1,0 +1,17 @@
+[project]
+name = "pocket-f9p"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "h-shiono", email = "hato.gnss@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+pocket-f9p = "pocket_f9p:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
