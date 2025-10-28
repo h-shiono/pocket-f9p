@@ -17,15 +17,30 @@
 > [!WARNING]
 > F9PのUSBポートに接続する際には、HWスイッチを必ず`オフ`にしてください。ボード（`XIAO ESP32C`か`u-blox F9P`、あるいは両方）が破損する可能性があります。
 
-<img src="images/receiver-top.png" width="80%" style="display: block; margin: auto;" />
+<img src="images/receiver-top.png" width="60%" style="display: block; margin: auto;" />
 <br>
-<img src="images/receiver-bottom.png" width="80%" style="display: block; margin: auto;" />
+<img src="images/receiver-bottom.png" width="60%" style="display: block; margin: auto;" />
 
 ## ⚙️ Setup
 
 以下に本受信機のセットアップ方法を示す。
 
 ### Hardware
+
+##### Parts list
+
+Parts                                                                                                                       |Qty|Description
+----------------------------------------------------------------------------------------------------------------------------|---|-----------
+[SparkFun GPS-RTK2 Board - ZED-F9P (Qwiic)](https://www.sparkfun.com/sparkfun-gps-rtk2-board-zed-f9p-qwiic-gps-15136.html)  |1  |GNSS受信機
+[Seeeduino XIAO ESP32C](https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html)                                         |1  |バッテリー充電、BLE/NTRIPインタフェース
+[SparkFun OpenLog](https://www.sparkfun.com/sparkfun-openlog.html)                                                          |1  |Micro SDロガー
+[DATA POWER TECHNOLOGY DTP652533](https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-67JP)                         |1  |リチウムイオンバッテリー
+SMA to U.FL Cable                                                                                                           |1  |SMA <-> U.FL変換
+[NKK Switches SS-12SDP2](https://www.nkkswitches.co.jp/product/detailed/SS-12SDP2.html)                                     |1  |HWスイッチ
+M3 x 5                                                                                                                      |2  |ケース固定用
+
+> [!NOTE]
+> 実際の組み立てには[SwitchScience ZED-F9P搭載GPS-RTKピッチ変換基板](https://www.switch-science.com/products/10511?_pos=4&_sid=bce749730&_ss=r)を使用しました。念のため。
 
 #### ケースのプリント
 
@@ -35,12 +50,11 @@
 - [Pocket-F9P-Center.3mf](case/Pocket-F9P-Center.3mf): ケース中央
 - [Pocket-F9P-Top.3mf](case/Pocket-F9P-Top.3mf): ケース下段（ロガー、XIAO、バッテリー、HW SW）
 
-#### Assembly
+##### Wiring
 
-> [!CAUTION]
-> 先にXIAOの[Firmware書き込み](#write-firmware)を済ませることをおすすめします。
+配線は以下を参考にされたい。
 
-##### 接続図
+**Block Diagram**
 
 ```mermaid
 graph LR
@@ -84,30 +98,16 @@ graph LR
     end
 ```
 
-##### Parts list
+**Wiring Image**
 
-Parts                                                                                                                       |Qty|Description
-----------------------------------------------------------------------------------------------------------------------------|---|-----------
-[SparkFun GPS-RTK2 Board - ZED-F9P (Qwiic)](https://www.sparkfun.com/sparkfun-gps-rtk2-board-zed-f9p-qwiic-gps-15136.html)  |1  |GNSS受信機
-[Seeeduino XIAO ESP32C](https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html)                                         |1  |バッテリー充電、BLE/NTRIPインタフェース
-[SparkFun OpenLog](https://www.sparkfun.com/sparkfun-openlog.html)                                                          |1  |Micro SDロガー
-[DATA POWER TECHNOLOGY DTP652533](https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-67JP)                         |1  |リチウムイオンバッテリー
-SMA to U.FL Cable                                                                                                           |1  |-
-[NKK Switches SS-12SDP2](https://www.nkkswitches.co.jp/product/detailed/SS-12SDP2.html)                                     |1  |HWスイッチ
-M3 x 5                                                                                                                      |2  |ケース固定用
-
-> [!NOTE]
-> 実際の組み立てには[SwitchScience ZED-F9P搭載GPS-RTKピッチ変換基板](https://www.switch-science.com/products/10511?_pos=4&_sid=bce749730&_ss=r)を使用しました。念のため。
-
-##### Wiring
-
-配線は以下を参考にされたい。
-
-<img src="images/wiring.png" width="80%" style="display: block; margin: auto;" />
+<img src="images/wiring.png" width="60%" style="display: block; margin: auto;" />
 
 #### Assembly
 
-<img src="images/assembly.png" width="80%" style="display: block; margin: auto;" />
+> [!CAUTION]
+> 先にXIAOの[Firmware書き込み](#write-firmware)を済ませることをおすすめします。
+
+<img src="images/assembly.png" width="60%" style="display: block; margin: auto;" />
 
 ### Software
 
@@ -195,9 +195,9 @@ UART2   |0+1+5 - UBX+NMEA+RTCM3 |**1 - NMEA**           |**38400**  |XIAO
 >   - `0+1+5 - UBX+NMEA+RTCM3`等を設定しても問題はありませんが、フルコンステレーションの場合1秒以内のデータ転送は難しいと考えられます。
 > - ボーレートは38400bpsを推奨しますが、ファームウェアが自動検出します（9600/38400/115200/57600/19200/230400 bps対応）。
 
-### 📱 Setup (Smartphone)
+### 📱 Setup (Smartphone, Android)
 
-#### Application (Android)
+#### Application (GNSS Master)
 
 本開発では[GNSS Master](https://www.gnssmaster.com/)を用いる。
 
@@ -216,7 +216,7 @@ UART2   |0+1+5 - UBX+NMEA+RTCM3 |**1 - NMEA**           |**38400**  |XIAO
 
 `Receiver Data Output`右側の⚙️をタップし、必要に応じて受信機データを再配信する設定を行う（TCP Server等）。
 
-#### Developer Mode
+#### その他設定（Developer Mode, etc.）
 
 - **開発者向けオプションの有効化:** [デバイスの開発者向けオプションを設定する](https://developer.android.com/studio/debug/dev-options?hl=ja)を参考に`開発者向けオプション`を有効にする
 - **仮の現在地情報アプリの設定:** `⚙️設定 > システム > 開発者向けオプション > 場所`から、`仮の現在地情報アプリ`をタップし、`GNSS Master`を設定する
