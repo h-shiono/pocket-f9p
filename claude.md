@@ -8,7 +8,11 @@ XIAO ESP32C3上のMicroPythonで動作する、u-blox F9P GNSS受信機とスマ
 - F9PからのNMEAデータをBLE経由でスマートフォンに送信
 - スマートフォンからのRTCM補正データをF9Pに転送
 - 自動ボーレート検出（9600/38400/115200/57600/19200/230400 bps）
-- UBXバイナリプロトコルのフィルタリング（NMEAのみをスマホに送信）
+- **3つのデータ転送モード**
+  - **NMEA モード**（デフォルト）: NMEAセンテンスのみを転送、UBXをフィルタリング
+  - **RAW モード**: すべてのデータ（NMEA + UBX）をフィルタリングせずに転送
+  - **UBX モード**: UBXバイナリのみを転送、NMEAをフィルタリング
+- BLE経由でのモード切り替え機能
 
 ## ハードウェア構成
 
@@ -57,6 +61,57 @@ GND        -       GND
   - 次の5文字が大文字アルファベットまたは数字（例：GNRMC, GNGGA）
   - 6番目の文字がカンマ`,`
 
+## データ転送モード
+
+### モード切り替えコマンド
+
+スマートフォンアプリからBLE経由で以下のコマンドを送信することで、データ転送モードを切り替えられます：
+
+| コマンド | 説明 | 用途 |
+|---------|------|------|
+| `#MODE:NMEA\n` | NMEAモードに切り替え | 一般的なナビゲーションアプリ用 |
+| `#MODE:RAW\n` | RAWモードに切り替え | 研究・デバッグ用（u-centerなど） |
+| `#MODE:UBX\n` | UBXモードに切り替え | UBXバイナリ解析用 |
+| `#MODE:?\n` | 現在のモードを問い合わせ | 確認用 |
+
+### 各モードの動作
+
+#### NMEA モード（デフォルト）
+- **転送データ**: NMEAセンテンス（`$GNRMC`, `$GNGGA`など）のみ
+- **フィルタリング**: UBXバイナリを除外
+- **用途**: スマートフォンのナビゲーションアプリ、NMEA対応ソフトウェア
+- **データ量**: 全データの約5-30%（F9Pの設定による）
+
+#### RAW モード
+- **転送データ**: すべて（NMEA + UBX）
+- **フィルタリング**: なし
+- **用途**:
+  - u-centerでのデバッグ・設定変更
+  - 研究用途でのUBXデータ解析
+  - スマートフォンをTCPサーバーとして、PCから接続してu-center使用
+- **データ量**: 100%（約2-5KB/秒、F9Pの設定による）
+
+#### UBX モード
+- **転送データ**: UBXバイナリのみ
+- **フィルタリング**: NMEAセンテンスを除外
+- **用途**: UBX専用の解析ソフトウェア、カスタムアプリケーション
+- **データ量**: 全データの約70-95%（F9Pの設定による）
+
+### 使用例
+
+#### u-centerでのデバッグ（RAWモード）
+1. スマートフォンアプリでTCPサーバーを起動（例：ポート12345）
+2. XIAOに接続し、`#MODE:RAW\n` コマンドを送信
+3. PCをスマートフォンと同じネットワークに接続
+4. u-centerでTCPクライアントとして接続（スマホのIPアドレス:12345）
+5. F9PのすべてのデータがPCのu-centerに表示される
+6. u-centerからF9Pの設定変更、ファームウェア更新なども可能
+
+#### ナビゲーションアプリ使用（NMEAモード）
+1. XIAOに接続（デフォルトでNMEAモード）
+2. NMEAデータのみがスマートフォンに転送される
+3. アプリで位置情報を表示
+
 ## 実装した機能
 
 ### 1. ボーレート自動検出 (`detect_baudrate()`)
@@ -88,25 +143,32 @@ def is_valid_nmea_start(data, start_pos):
 - UBXバイナリ中の偶然の`0x24`を誤検出しない
 - 正しいNMEAセンテンスのみを抽出
 
-### 3. UBX/NMEAフィルタリング
+### 3. モード別データフィルタリング
 ```python
 # メインループでF9Pからのデータを処理
-while True:
-    if uart.any() > 0:
-        f9p_data = uart.read(uart.any())
+if forwarding_mode == 'RAW':
+    # すべてのデータをそのまま転送
+    data_to_send = f9p_data
 
-        # UBXメッセージをスキップ
-        if data[i] == 0xB5 and data[i+1] == 0x62:
-            # ペイロード長を読み取り、メッセージ全体をスキップ
+elif forwarding_mode == 'NMEA':
+    # UBXメッセージをスキップ、NMEAのみ抽出
+    if data[i] == 0xB5 and data[i+1] == 0x62:
+        # ペイロード長を読み取り、メッセージ全体をスキップ
+    elif data[i] == 0x24 and is_valid_nmea_start(data, i):
+        # 改行まで読み取り、バッファに追加
 
-        # NMEAセンテンスを抽出
-        elif data[i] == 0x24 and is_valid_nmea_start(data, i):
-            # 改行まで読み取り、BLEに転送
+elif forwarding_mode == 'UBX':
+    # NMEAをスキップ、UBXのみ抽出
+    if data[i] == 0xB5 and data[i+1] == 0x62:
+        # UBXメッセージ全体をバッファに追加
+    elif data[i] == 0x24 and is_valid_nmea_start(data, i):
+        # NMEAセンテンスをスキップ
 ```
 
 **効果**:
-- スマホアプリはNMEAデータのみを受信
-- 不要なUBXデータは転送しない
+- モードに応じて適切なデータのみを転送
+- RAWモードでu-centerなどのデバッグツールが使用可能
+- NMEAモードで不要なUBXデータを削減
 
 ### 4. BLE Nordic UART Service (NUS)
 - Service UUID: `6E400001-B5A3-F393-E0A9-E50E24DCCA9E`
@@ -124,20 +186,43 @@ Detected GNSS data at baudrate: 115200
 Using baudrate: 115200
 ```
 
-### BLE接続後
+### BLE接続後（NMEAモード）
 ```
 BLE Connected
-Read 346 bytes from F9P, forwarding 265 bytes NMEA to BLE
+Status: BLE=Connected, Mode=NMEA, UART buffer=0 bytes
+Read 346 bytes from F9P, forwarding 265 bytes NMEA
 Sent 265 bytes to BLE
 Read 237 bytes from F9P (UBX only, not forwarding)
-Read 389 bytes from F9P, forwarding 105 bytes NMEA to BLE
+Read 389 bytes from F9P, forwarding 105 bytes NMEA
 Sent 105 bytes to BLE
 ```
 
-### データ統計
+### モード切り替え例
+```
+Status: BLE=Connected, Mode=NMEA, UART buffer=0 bytes
+Received 10 bytes from BLE, writing to F9P UART
+Mode switched to: RAW (all data)
+Status: BLE=Connected, Mode=RAW, UART buffer=0 bytes
+Read 450 bytes from F9P, forwarding all (RAW mode)
+Sent 450 bytes to BLE
+```
+
+### データ統計（各モード）
+
+#### NMEAモード
 - **F9P出力**: NMEA 5%, UBX 95%
-- **スマホ受信**: NMEA 100% (フィルタリング済み)
-- **転送効率**: 約30-40%のデータのみを転送（不要なUBXを除外）
+- **スマホ受信**: NMEA 100% (UBXフィルタリング済み)
+- **転送効率**: 約5-30%のデータのみを転送
+
+#### RAWモード
+- **F9P出力**: NMEA 5%, UBX 95%
+- **スマホ受信**: NMEA + UBX 100%
+- **転送効率**: 100%（フィルタリングなし）
+
+#### UBXモード
+- **F9P出力**: NMEA 5%, UBX 95%
+- **スマホ受信**: UBX 100% (NMEAフィルタリング済み)
+- **転送効率**: 約70-95%のデータのみを転送
 
 ## 受信したNMEAデータ例
 
@@ -157,8 +242,10 @@ $GNVTG,,T,,M,0.015,N,0.029,K,D*34
 
 ## 最適化の推奨事項
 
-### u-centerでの設定変更
-現在F9PはUBX（95%）とNMEA（5%）を混在出力しています。スマホアプリがNMEAのみ必要な場合：
+### 用途別の推奨設定
+
+#### ナビゲーション用途（NMEAモード使用）
+XIAOをNMEAモードで使用し、さらにF9PのUBX出力を無効化すると効率的です：
 
 1. F9PをPCに接続してu-centerを起動
 2. **UBX → CFG → PRT (Ports)** を選択
@@ -168,9 +255,22 @@ $GNVTG,,T,,M,0.015,N,0.029,K,D*34
 6. **UBX → CFG → CFG** で設定を保存
 
 **効果**:
-- 不要なデータ転送を削減
-- 処理負荷を軽減
+- XIAOでのフィルタリング処理が不要
+- データ転送量を削減
 - バッテリー消費を改善
+
+#### 研究・デバッグ用途（RAWモード使用）
+F9PはUBX+NMEA混在のまま、XIAOをRAWモードで使用：
+
+1. XIAOに`#MODE:RAW\n`コマンドを送信
+2. F9Pの設定はそのまま（UBX + NMEA出力）
+3. スマートフォンでTCPサーバーを起動
+4. PCからu-centerで接続
+
+**効果**:
+- F9Pのすべてのデータにアクセス可能
+- u-centerでリアルタイム設定変更可能
+- UBXプロトコルでの詳細解析が可能
 
 ## ファイル構成
 
@@ -252,10 +352,12 @@ pocket-f9p/
 
 ### 2025-10-28
 - ボーレート自動検出機能を実装
-- NMEAフィルタリング機能を実装
-- NMEA検証ロジックを強化
+- 3つのデータ転送モード（NMEA/RAW/UBX）を実装
+- BLE経由でのモード切り替えコマンドを実装
+- NMEA検証ロジックを強化（誤検出対策）
 - 配線問題を修正
-- 初回動作確認成功
+- 初回動作確認成功（NMEAモード）
+- RAWモードで研究・デバッグ用途に対応
 
 ## 貢献者
 

@@ -241,6 +241,12 @@ ble.gatts_set_buffer(tx_handle, 512, True)
 # connection handle
 conn_handle_global = None
 
+# Data forwarding mode
+# "NMEA" - Forward only NMEA sentences (default)
+# "RAW"  - Forward all data (NMEA + UBX)
+# "UBX"  - Forward only UBX binary
+forwarding_mode = "NMEA"
+
 
 # BLE callback function
 def ble_irq(event, data):
@@ -266,11 +272,35 @@ def ble_irq(event, data):
         advertise()
 
     elif event == _IRQ_GATTS_WRITE:
-        # Data written from smartphone (RTCM data received!)
+        # Data written from smartphone (RTCM data or commands received!)
+        global forwarding_mode
         conn_handle, value_handle = data
         if conn_handle == conn_handle_global and value_handle == rx_handle:
-            # Write to UART (F9P)
+            # Read data from BLE
             data_received = ble.gatts_read(rx_handle)
+
+            # Check if it's a mode switching command
+            try:
+                data_str = data_received.decode("utf-8").strip()
+                if data_str.startswith("#MODE:"):
+                    command = data_str[6:].upper()
+                    if command == "NMEA":
+                        forwarding_mode = "NMEA"
+                        print("Mode switched to: NMEA only")
+                    elif command == "RAW":
+                        forwarding_mode = "RAW"
+                        print("Mode switched to: RAW (all data)")
+                    elif command == "UBX":
+                        forwarding_mode = "UBX"
+                        print("Mode switched to: UBX only")
+                    elif command == "?":
+                        print(f"Current mode: {forwarding_mode}")
+                    else:
+                        print(f"Unknown mode command: {command}")
+                    return
+            except (UnicodeError, AttributeError):
+                # Not a text command, assume it's RTCM data
+                pass
 
             print(f"Received {len(data_received)} bytes from BLE, writing to F9P UART")
 
@@ -316,7 +346,7 @@ while True:
     if loop_count % 250 == 0:  # 250 * 20ms = 5 seconds
         bytes_available = uart.any()
         print(
-            f"Status: BLE={'Connected' if conn_handle_global else 'Disconnected'}, UART buffer={bytes_available} bytes"
+            f"Status: BLE={'Connected' if conn_handle_global else 'Disconnected'}, Mode={forwarding_mode}, UART buffer={bytes_available} bytes"
         )
 
     if conn_handle_global is not None:
@@ -326,65 +356,123 @@ while True:
             # Read data from F9P
             f9p_data = uart.read(bytes_available)
             if f9p_data and len(f9p_data) > 0:
-                # Filter: Only forward NMEA data (starts with $), skip UBX binary (starts with 0xB5)
-                # Split and filter NMEA sentences
-                nmea_only = bytearray()
-                i = 0
-                while i < len(f9p_data):
-                    # Skip UBX messages (0xB5 0x62 + 4 byte header + payload + 2 byte checksum)
-                    if (
-                        i < len(f9p_data) - 1
-                        and f9p_data[i] == 0xB5
-                        and f9p_data[i + 1] == 0x62
-                    ):
-                        # UBX message detected, skip it
-                        if i + 6 <= len(f9p_data):
-                            # Read payload length (little-endian uint16 at offset 4-5)
-                            payload_len = f9p_data[i + 4] | (f9p_data[i + 5] << 8)
-                            ubx_msg_len = (
-                                6 + payload_len + 2
-                            )  # header + payload + checksum
-                            i += ubx_msg_len
-                            continue
+                # Process data based on forwarding mode
+                data_to_send = None
+
+                if forwarding_mode == "RAW":
+                    # RAW mode: Forward all data without filtering
+                    data_to_send = f9p_data
+                    print(
+                        f"Read {len(f9p_data)} bytes from F9P, forwarding all (RAW mode)"
+                    )
+
+                elif forwarding_mode == "NMEA":
+                    # NMEA mode: Filter out UBX, keep only NMEA
+                    nmea_only = bytearray()
+                    i = 0
+                    while i < len(f9p_data):
+                        # Skip UBX messages (0xB5 0x62 + 4 byte header + payload + 2 byte checksum)
+                        if (
+                            i < len(f9p_data) - 1
+                            and f9p_data[i] == 0xB5
+                            and f9p_data[i + 1] == 0x62
+                        ):
+                            # UBX message detected, skip it
+                            if i + 6 <= len(f9p_data):
+                                # Read payload length (little-endian uint16 at offset 4-5)
+                                payload_len = f9p_data[i + 4] | (f9p_data[i + 5] << 8)
+                                ubx_msg_len = (
+                                    6 + payload_len + 2
+                                )  # header + payload + checksum
+                                i += ubx_msg_len
+                                continue
+                            else:
+                                # Incomplete UBX message, skip to end
+                                break
+                        # Keep NMEA data only
+                        elif f9p_data[i] == 0x24:  # '$' - potential NMEA start
+                            # Validate it's a real NMEA sentence
+                            if is_valid_nmea_start(f9p_data, i):
+                                # Find end of NMEA sentence (CR LF)
+                                end = i
+                                while end < len(f9p_data) and f9p_data[end] != 0x0A:
+                                    end += 1
+                                if end < len(f9p_data):
+                                    end += 1  # Include the LF
+                                    nmea_only.extend(f9p_data[i:end])
+                                i = end
+                            else:
+                                # False positive $, skip it
+                                i += 1
                         else:
+                            # Other data, skip
+                            i += 1
+
+                    if len(nmea_only) > 0:
+                        data_to_send = bytes(nmea_only)
+                        print(
+                            f"Read {len(f9p_data)} bytes from F9P, forwarding {len(nmea_only)} bytes NMEA"
+                        )
+                    else:
+                        print(
+                            f"Read {len(f9p_data)} bytes from F9P (UBX only, not forwarding)"
+                        )
+
+                elif forwarding_mode == "UBX":
+                    # UBX mode: Filter out NMEA, keep only UBX
+                    ubx_only = bytearray()
+                    i = 0
+                    while i < len(f9p_data):
+                        # Keep UBX messages
+                        if (
+                            i < len(f9p_data) - 1
+                            and f9p_data[i] == 0xB5
+                            and f9p_data[i + 1] == 0x62
+                        ):
+                            # UBX message detected, keep it
+                            if i + 6 <= len(f9p_data):
+                                # Read payload length (little-endian uint16 at offset 4-5)
+                                payload_len = f9p_data[i + 4] | (f9p_data[i + 5] << 8)
+                                ubx_msg_len = (
+                                    6 + payload_len + 2
+                                )  # header + payload + checksum
+                                if i + ubx_msg_len <= len(f9p_data):
+                                    ubx_only.extend(f9p_data[i : i + ubx_msg_len])
+                                    i += ubx_msg_len
+                                    continue
                             # Incomplete UBX message, skip to end
                             break
-                    # Keep NMEA data only
-                    elif f9p_data[i] == 0x24:  # '$' - potential NMEA start
-                        # Validate it's a real NMEA sentence
-                        if is_valid_nmea_start(f9p_data, i):
-                            # Find end of NMEA sentence (CR LF)
+                        # Skip NMEA sentences
+                        elif f9p_data[i] == 0x24 and is_valid_nmea_start(f9p_data, i):
+                            # Skip to end of NMEA sentence
                             end = i
                             while end < len(f9p_data) and f9p_data[end] != 0x0A:
                                 end += 1
                             if end < len(f9p_data):
-                                end += 1  # Include the LF
-                                nmea_only.extend(f9p_data[i:end])
+                                end += 1  # Skip the LF
                             i = end
                         else:
-                            # False positive $, skip it
+                            # Other data, skip
                             i += 1
+
+                    if len(ubx_only) > 0:
+                        data_to_send = bytes(ubx_only)
+                        print(
+                            f"Read {len(f9p_data)} bytes from F9P, forwarding {len(ubx_only)} bytes UBX"
+                        )
                     else:
-                        # Other data, skip
-                        i += 1
+                        print(
+                            f"Read {len(f9p_data)} bytes from F9P (NMEA only, not forwarding)"
+                        )
 
-                if len(nmea_only) > 0:
-                    print(
-                        f"Read {len(f9p_data)} bytes from F9P, forwarding {len(nmea_only)} bytes NMEA to BLE"
-                    )
-
+                # Send data if available
+                if data_to_send:
                     try:
                         # Send via BLE Notify
-                        ble.gatts_notify(
-                            conn_handle_global, tx_handle, bytes(nmea_only)
-                        )
-                        print(f"Sent {len(nmea_only)} bytes to BLE")
+                        ble.gatts_notify(conn_handle_global, tx_handle, data_to_send)
+                        print(f"Sent {len(data_to_send)} bytes to BLE")
                     except OSError as e:
                         # Connection lost
                         print(f"Error: BLE connection lost during notify: {e}")
-                else:
-                    print(
-                        f"Read {len(f9p_data)} bytes from F9P (UBX only, not forwarding)"
-                    )
 
     time.sleep_ms(20)
