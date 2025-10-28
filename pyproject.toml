@@ -7,7 +7,9 @@ authors = [
     { name = "h-shiono", email = "hato.gnss@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "esptool>=5.1.0",
+]
 
 [project.scripts]
 pocket-f9p = "pocket_f9p:main"
