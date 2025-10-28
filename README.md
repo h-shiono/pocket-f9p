@@ -99,11 +99,15 @@ M3 x 5                                                                          
 > [!NOTE]
 > 実際の組み立てには[SwitchScience ZED-F9P搭載GPS-RTKピッチ変換基板](https://www.switch-science.com/products/10511?_pos=4&_sid=bce749730&_ss=r)を使用しました。念のため。
 
-##### Assembly
+##### Wiring
 
 配線は以下を参考にされたい。
 
 <img src="images/wiring.png" width="80%" style="display: block; margin: auto;" />
+
+#### Assembly
+
+<img src="images/assembly.png" width="80%" style="display: block; margin: auto;" />
 
 ### Software
 
