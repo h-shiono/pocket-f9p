@@ -173,7 +173,10 @@ UART1   |0+1+5 - UBX+NMEA+RTCM3 |0+1+5 - UBX+NMEA+RTCM3 |115200     |Logger
 UART2   |0+1+5 - UBX+NMEA+RTCM3 |1 - NMEA               |38400      |XIAO
 
 > [!NOTE]
-> `UART2`の`Protocol out`に`UBX`を設定しても問題はないが、フルコンステレーションの場合1秒以内のデータ転送は難しい。
+> - XIAOファームウェアは**NMEA出力のみ**に対応しています。
+> - UART2の`Protocol out`は`1 - NMEA`**のみ**に設定してください。
+>   - `0+1+5 - UBX+NMEA+RTCM3`等を設定しても問題はありませんが、フルコンステレーションの場合1秒以内のデータ転送は難しいと考えられます。
+> - ボーレートは38400bpsを推奨しますが、ファームウェアが自動検出します（9600/38400/115200/57600/19200/230400 bps対応）。
 
 ### Smartphone Application (Android)
 
