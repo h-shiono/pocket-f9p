@@ -207,9 +207,24 @@ UART2   |0+1+5 - UBX+NMEA+RTCM3 |1 - NMEA               |38400      |XIAO
 2. **GNSS Masterを起動し、受信機と接続する**: 設定については[GNSS Receiver Connection Setting](#gnss-receiver-connection-setting)を参照
 3. **GNSS MasterにてCorrection Inputを接続する（補正が必要な場合）**: 設定については[Correction Input Setting](#correction-input-setting)を参照
 
-# 🤝 Contributor
+# 🧠 LLM Utilization
 
-- 開発: h-shiono
-- 技術サポート:
-    - 設計検討: Gemini
-    - コーディング: Claude (Anthropic)
+- 設計検討: Gemini
+- コーディング補助: Claude (Anthropic)
+
+# 🤝 Contributing
+
+バグ報告、機能提案、プルリクエストを歓迎します。
+
+1.  Issueを立てて問題を報告してください。
+2.  プルリクエストを送る際は、変更内容を明確に記述してください。
+
+# ⚠️ Known Issues & Limitations
+
+- **プロトタイプ品質:** 本ソフトウェアはプロトタイプであり、長時間の連続稼働における堅牢性（例外処理や自動再接続）は十分に検証されていません。
+- **アプリ依存性:** `GNSS Master`アプリとの接続は確認済みですが、他のNTRIPアプリ（特にBLE NUS非対応アプリ）では動作しない可能性があります。
+
+# 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+(3D data files are licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/))
