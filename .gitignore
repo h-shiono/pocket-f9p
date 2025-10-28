@@ -11,3 +11,6 @@ wheels/
 
 # VS Code settings
 .vscode/
+
+# MicroPython firmware binary
+ESP32_*.bin
