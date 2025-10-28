@@ -17,28 +17,80 @@
 
 # ⚙️ Setup
 
+以下に本受信機のセットアップ方法を示す。
+
 ## Hardware
 
 ### Print Case
 
-[case](case/)ディレクトリ内にある3つのコンポーネントを3Dプリントしてください。
+[case](case/)ディレクトリ内にある3つのコンポーネントを3Dプリントする。
+
+- [Pocket-F9P-Bottom.3mf](case/Pocket-F9P-Bottom.3mf): ケース上段（F9P基板）
+- [Pocket-F9P-Center.3mf](case/Pocket-F9P-Center.3mf): ケース中央
+- [Pocket-F9P-Top.3mf](case/Pocket-F9P-Top.3mf): ケース下段（ロガー、XIAO、バッテリー、HW SW）
 
 ### Assembly
 
 > [!CAUTION]
 > 先にXIAOの[Firmware書き込み](#write-firmware)を済ませることをおすすめします。
 
+#### 接続図
+
+```mermaid
+graph LR
+
+    sw[HW Switch]
+
+    subgraph XIAO
+        gnd_pad[GND Pad]
+        vcc_pad[VCC Pad]
+        d1["D1 (Tx)"]
+        d2["D2 (Rx)"]
+        xiao_vcc[3.3V]
+        xiao_gnd[GND]
+    end
+
+    subgraph SW
+        sw[SW] --- vcc_pad
+    end
+
+    subgraph Battery
+        bat_minus[Bat -] --- gnd_pad
+        bat_plus[Bat +] --- sw
+    end
+
+    subgraph Open-log
+        ol_tx[Tx]
+        ol_rx[Rx]
+        ol_vcc[3.3V]
+        ol_gnd[GND]
+    end
+
+    subgraph F9P-board
+        tx_1[UART1 Tx] --- ol_rx
+        rx_1[UART1 Rx] --- ol_tx
+        tx_2[UART2 Tx] --- d2
+        rx_2[UART2 Rx] --- d1
+        f9_gnd[GND] --- ol_gnd 
+        f9_vcc[3.3V] --- ol_vcc
+        f9_gnd --- xiao_gnd
+        f9_vcc --- xiao_vcc
+    end
+```
+
 #### Parts list
 
-Parts                                                                                                                   |Qty|Description
-------------------------------------------------------------------------------------------------------------------------|---|-----------
-[SwitchScience ZED-F9P搭載GPS-RTKピッチ変換基板](https://www.switch-science.com/products/10511?_pos=4&_sid=bce749730&_ss=r)|1  |GNSS受信機
-[Seeeduino XIAO ESP32C](https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html)                                     |1  |バッテリー充電、BLE/NTRIPインタフェース
-[SparkFun OpenLog](https://www.sparkfun.com/sparkfun-openlog.html)                                                      |1  |Micro SDロガー
-[DATA POWER TECHNOLOGY DTP652533](https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-67JP)                     |1  |リチウムイオンバッテリー
-SMA to U.FL Cable                                                                                                       |1  |-
-[NKK Switches SS-12SDP2](https://www.nkkswitches.co.jp/product/detailed/SS-12SDP2.html)                                 |1  |HWスイッチ
-M3 x 5                                                                                                                  |2  |ケース固定用
+Parts                                                                                                                       |Qty|Description
+----------------------------------------------------------------------------------------------------------------------------|---|-----------
+[SparkFun GPS-RTK2 Board - ZED-F9P (Qwiic)](https://www.sparkfun.com/sparkfun-gps-rtk2-board-zed-f9p-qwiic-gps-15136.html)  |1  |GNSS受信機 (*1)
+[Seeeduino XIAO ESP32C](https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html)                                         |1  |バッテリー充電、BLE/NTRIPインタフェース
+[SparkFun OpenLog](https://www.sparkfun.com/sparkfun-openlog.html)                                                          |1  |Micro SDロガー
+[DATA POWER TECHNOLOGY DTP652533](https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-67JP)                         |1  |リチウムイオンバッテリー
+SMA to U.FL Cable                                                                                                           |1  |-
+[NKK Switches SS-12SDP2](https://www.nkkswitches.co.jp/product/detailed/SS-12SDP2.html)                                     |1  |HWスイッチ
+M3 x 5                                                                                                                      |2  |ケース固定用
+
+***1**: 実際の組み立てには[SwitchScience ZED-F9P搭載GPS-RTKピッチ変換基板](https://www.switch-science.com/products/10511?_pos=4&_sid=bce749730&_ss=r)を使用した。
 
 ## Software
 
@@ -53,22 +105,14 @@ uv sync
 
 ### XIAO ESP32C
 
-#### Write Firmware
+#### Firmwareの書き込み
 
-**Download Firmware**
-
-[MicroPython ESP32-C3](https://micropython.org/download/ESP32_GENERIC_C3/)より、Firmwareをダウンロードする。
+1. **Firmwareのダウンロード**: [MicroPython ESP32-C3](https://micropython.org/download/ESP32_GENERIC_C3/)より、Firmwareをダウンロードする。
 ダウンロード後、本ディレクトリに移動する。
+2. **Flashの消去**: 上記サイトの`Installation instructions`を参考に、まず`erase-flash`を行う。
+3. **Firmwareの書込み**: その後、先の手順でダウンロードしたFirmwareを`write-flash`する。
 
-```bash
-mv ~/Downloads/ESP32_GENERIC_C3-20250911-v1.26.1.bin
-```
-
-以下、上記サイトの`Installation instructions`を参考にFirmware書き込みを行う。
-
-**Erase Flash**
-
-まず、`erase-flash`を行う。
+##### Erase Flash
 
 ```bash
 % esptool --port /dev/cu.usbmodem1101 erase-flash 
@@ -87,9 +131,7 @@ Flash memory erased successfully in 14.9 seconds.
 Hard resetting via RTS pin...
 ```
 
-**Write Firmware**
-
-その後、先の手順でダウンロードしたFirmwareを`write-flash`する。
+##### Write Firmware
 
 ```bash
 % esptool --port /dev/cu.usbmodem1101 --baud 460800 write-flash 0 ESP32_GENERIC_C3-20250911-v1.26.1.bin
@@ -113,23 +155,25 @@ Hash of data verified.
 Hard resetting via RTS pin...
 ```
 
-#### Write Script
+#### Scriptの書き込み
 
-MicroPythonのFirmwareが書き込めたら、次にスマートフォン／F9PをブリッヂするためのScriptをXIAOに書き込む。
+MicroPythonのFirmwareを書込み後、次にスマートフォン／F9PをブリッヂするためのScriptをXIAOに書き込む。
 
-**Install Extension**
-
-MARKETPLACEより`MicroPico`をインストールする。
-
-**Connect XIAO**
-
-USBケーブルでPCとXIAOを接続後、`VS Code`のコマンドパレットで`Shift + >MicroPico: Connect`を実行する。
-
-**Write Script**
-
-[main.py](src/pocket_f9p/main.py)を開き、その状態から再度コマンドパレットを開き、`Shift + >MicroPico: Upload file to pico`を実行しXIAOにスクリプトをアップロードする。
+1. **Extensionのインストール**: MARKETPLACEより[MicroPico`](https://marketplace.visualstudio.com/items?itemName=paulober.pico-w-go)をインストールする。
+2. **XIAOとPCの接続**: USBケーブルでPCとXIAOを接続後、`VS Code`のコマンドパレットで`Shift + >MicroPico: Connect`を実行する。
+3. **Scriptの書き込み**: [main.py](src/pocket_f9p/main.py)を開き、その状態から再度コマンドパレットを開き、`Shift + >MicroPico: Upload file to pico`を実行しXIAOにスクリプトをアップロードする。
 
 ### u-blox F9P
+
+`u-blox F9P`のポート設定は以下のとおり。
+
+Target  |Protocol in            |Protocol out           |Baudrate   |Dest.
+--------|-----------------------|-----------------------|-----------|-----
+UART1   |0+1+5 - UBX+NMEA+RTCM3 |0+1+5 - UBX+NMEA+RTCM3 |115200     |Logger
+UART2   |0+1+5 - UBX+NMEA+RTCM3 |1 - NMEA               |38400      |XIAO
+
+> [!NOTE]
+> `UART2`の`Protocol out`に`UBX`を設定しても問題はないが、フルコンステレーションの場合1秒以内のデータ転送は難しい。
 
 ### Smartphone Application (Android)
 
