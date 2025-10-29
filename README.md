@@ -213,7 +213,7 @@ UART2   |0+1+5 - UBX+NMEA+RTCM3 |**1 - NMEA**           |**38400**  |XIAO
 > - Our firmware supports **NMEA output only**
 > - Set `1 - NMEA` for UART2 protocol out
 >   - It is okay to set `0+1+5 - UBX+NMEA+RTCM3` for UART2 protocol out, however it's difficult to forward the whole data within 1 sec when using full GNSS constellations
-> - We recommended the baudrate 38400bps, but the firmware can detect it the automatically (supports 9600/38400/115200/57600/19200/230400 bps)
+> - We recommended the baudrate 38400bps, but the firmware can detect it automatically (supports 9600/38400/115200/57600/19200/230400 bps)
 
 ### 📱 Setup (Smartphone, Android)
 
