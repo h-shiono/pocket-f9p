@@ -223,7 +223,7 @@ We utilized [GNSS Master](https://www.gnssmaster.com/) for this development.
 
 ##### GNSS Receiver Connection Setting
 
-Tap ⚙️ on the right side of `GNSS Receiver Connection`, and set the folloing:
+Tap ⚙️ on the right side of `GNSS Receiver Connection`, and set the following:
 
 - **Mode:** `Bluetooth LE`
 - **Paired Devices:** `Pocket-F9P`
