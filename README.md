@@ -1,49 +1,84 @@
-# 📡 Pocket F9P
+# 📡 Pocket-F9P
 
-`Pocket F9P`は`u-blox`社製の小型高精度GNSS受信機を手軽に、便利に持ち運べるように設計したコンパクト受信機です。
+`Pocket-F9P` is a pocketable, all-in-one high-precision GNSS (F9P) receiver with a battery, data logger, and BLE (NTRIP) interface.
 
 > [!IMPORTANT]
-> 本リポジトリの内容を用いて行う一切の行為、被った損害・損失に対しては、一切の責任を負いかねます。 
+> ⚠️ We shall not be held responsible for any damage or loss incurred as a result of actions taken based on the information contained in this repository. 
 
-<img src="images/receiver.jpg" width="80%" style="display: block; margin: auto;" />
+<img src="images/receiver.jpg" width="60%" style="display: block; margin: auto;" />
+
+[🇯🇵 README](README_jp.md)
 
 ## 🚀　Overview
 
-- **バッテリー駆動、小型、高性能なGNSS受信機:** 小型（Approx. 48 mm x 48 mm x 22 mm）、高性能な`u-blox F9P`をさらに使いやすく、Micro SDロガー・通信機能・バッテリーを備えたオールインワン小型受信機として設計
-- **BLEを通じた通信、補正情報の利用に対応:** `GNSS Master`などのスマートフォン向けNTRIP通信アプリを介し受信機の測位結果をリアルタイムに受信可能、さらに`NTRIP`等による補正にも対応
-- **用途に応じてマイコンボードをカスタマイズ可能:** 通信には小型マイコンである`Seeeduino XIAO`を用いており、ユーザは必要に応じて自由にアプリケーションを書き換え可能
+- **Battery Driven, Compact, High-Accuracy GNSS Receiver:** Designed the compact (Approx. 48 mm x 48 mm x 22 mm) GNSS receiver to improve the usability of u-blox F9P, with Micro SD logger, communication and battery
+- **Supports correction input via BLE:** By combining with the smartphone application such as `GNSS Master`, the receiver can utilize the correction data via `NTRIP`
+- **Customizable microcontroller:** The microcontroller `Seeeduino XIAO` is utilized for the communication, so it’s easy to customize the application for user-dedicated objectives
 
-**使用上の注意**
+**Important notes for use**
 > [!WARNING]
-> F9PのUSBポートに接続する際には、HWスイッチを必ず`オフ`にしてください。ボード（`XIAO ESP32C`か`u-blox F9P`、あるいは両方）が破損する可能性があります。
+> When you connect to the F9P usb port, you have to switch the hw switch `off`.
+> The boards (`XIAO ESP32C`, `u-blox F9P` or both) will be damaged.
 
-<img src="images/receiver-top.png" width="80%" style="display: block; margin: auto;" />
+<img src="images/receiver-top.png" width="60%" style="display: block; margin: auto;" />
 <br>
-<img src="images/receiver-bottom.png" width="80%" style="display: block; margin: auto;" />
+<img src="images/receiver-bottom.png" width="60%" style="display: block; margin: auto;" />
 
 ## ⚙️ Setup
 
-以下に本受信機のセットアップ方法を示す。
+This section describes how to setup the receiver.
 
 ### Hardware
 
-#### ケースのプリント
+##### Parts list
 
-[case](case/)ディレクトリ内にある3つのコンポーネントを3Dプリントする。
+Parts                                                                                                                       |Qty|Description
+----------------------------------------------------------------------------------------------------------------------------|---|-----------
+[SparkFun GPS-RTK2 Board - ZED-F9P (Qwiic)](https://www.sparkfun.com/sparkfun-gps-rtk2-board-zed-f9p-qwiic-gps-15136.html)  |1  |GNSS Receiver
+[Seeeduino XIAO ESP32C](https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html)                                         |1  |Battery charger and BLE/NTRIP Interface
+[SparkFun OpenLog](https://www.sparkfun.com/sparkfun-openlog.html)                                                          |1  |Micro SD Logger
+[DATA POWER TECHNOLOGY DTP652533](https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-67JP)                         |1  |Battery
+SMA to U.FL Cable                                                                                                           |1  |SMA <-> U.FL Conversion
+[NKK Switches SS-12SDP2](https://www.nkkswitches.co.jp/product/detailed/SS-12SDP2.html)                                     |1  |HW Switch
+M3 x 5                                                                                                                      |2  |To secure the case
+M3 x 25                                                                                                                     |4  |**Optional, Recommended** To secure the exoskeleton
+M3 Nut                                                                                                                      |4  |**Optional, Recommended** To secure the exoskeleton
 
-- [Pocket-F9P-Bottom.3mf](case/Pocket-F9P-Bottom.3mf): ケース上段（F9P基板）
-- [Pocket-F9P-Center.3mf](case/Pocket-F9P-Center.3mf): ケース中央
-- [Pocket-F9P-Top.3mf](case/Pocket-F9P-Top.3mf): ケース下段（ロガー、XIAO、バッテリー、HW SW）
+> [!NOTE]
+> We utilized [SwitchScience ZED-F9P搭載GPS-RTKピッチ変換基板](https://www.switch-science.com/products/10511?_pos=4&_sid=bce749730&_ss=r) receiver for the prototyping.
 
-#### Assembly
+#### Print the case
 
-> [!CAUTION]
-> 先にXIAOの[Firmware書き込み](#write-firmware)を済ませることをおすすめします。
+This repository provides two case options:
 
-##### 接続図
+**v0.1.0 (Standard)**
+The original compact case. *Note: The BLE antenna is exposed.*
+
+- [Pocket-F9P-Top.3mf](case/Pocket-F9P-Top.3mf): Upper (F9P)
+- [Pocket-F9P-Center.3mf](case/Pocket-F9P-Center.3mf): Center frame
+- [Pocket-F9P-Bottom.3mf](case/Pocket-F9P-Bottom.3mf): Bottom (Logger, XIAO, Battery, HW Switch)
+
+**v0.2.0 (with Exoskeleton)**
+Recommended. Includes an external frame to protect the BLE antenna and add robustness.
+
+- [Pocket-F9P-Top.3mf](case/Pocket-F9P-Top.3mf): Upper (F9P)
+- [Pocket-F9P-Center.3mf](case/Pocket-F9P-Center.3mf): Center frame
+- [Pocket-F9P-Bottom.3mf](case/Pocket-F9P-Bottom.3mf): Bottom (Logger, XIAO, Battery, HW Switch)
+- [Exoskeleton-Top.3mf](case/Exoskeleton-Top.3mf)
+- [Exoskeleton-Bottom.3mf](case/Exoskeleton-Bottom.3mf)
+
+<img src="images/receiver-w-exoskeleton-top.jpg" width="60%" style="display: block; margin: auto;" />
+<br>
+<img src="images/receiver-w-exoskeleton-bottom.jpg" width="60%" style="display: block; margin: auto;" />
+
+##### Wiring
+
+Please refer to the following diagram and figure for wiring.
+
+**Block Diagram**
 
 ```mermaid
-graph LR
+graph TD
 
     sw[HW Switch]
 
@@ -84,36 +119,22 @@ graph LR
     end
 ```
 
-##### Parts list
+**Wiring Image**
 
-Parts                                                                                                                       |Qty|Description
-----------------------------------------------------------------------------------------------------------------------------|---|-----------
-[SparkFun GPS-RTK2 Board - ZED-F9P (Qwiic)](https://www.sparkfun.com/sparkfun-gps-rtk2-board-zed-f9p-qwiic-gps-15136.html)  |1  |GNSS受信機
-[Seeeduino XIAO ESP32C](https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html)                                         |1  |バッテリー充電、BLE/NTRIPインタフェース
-[SparkFun OpenLog](https://www.sparkfun.com/sparkfun-openlog.html)                                                          |1  |Micro SDロガー
-[DATA POWER TECHNOLOGY DTP652533](https://www.sengoku.co.jp/mod/sgk_cart/detail.php?code=EEHD-67JP)                         |1  |リチウムイオンバッテリー
-SMA to U.FL Cable                                                                                                           |1  |-
-[NKK Switches SS-12SDP2](https://www.nkkswitches.co.jp/product/detailed/SS-12SDP2.html)                                     |1  |HWスイッチ
-M3 x 5                                                                                                                      |2  |ケース固定用
-
-> [!NOTE]
-> 実際の組み立てには[SwitchScience ZED-F9P搭載GPS-RTKピッチ変換基板](https://www.switch-science.com/products/10511?_pos=4&_sid=bce749730&_ss=r)を使用しました。念のため。
-
-##### Wiring
-
-配線は以下を参考にされたい。
-
-<img src="images/wiring.png" width="80%" style="display: block; margin: auto;" />
+<img src="images/wiring.png" width="60%" style="display: block; margin: auto;" />
 
 #### Assembly
 
-<img src="images/assembly.png" width="80%" style="display: block; margin: auto;" />
+> [!CAUTION]
+> We recommend [Write Firmware](#write-firmware) before assembling.
+
+<img src="images/assembly.png" width="60%" style="display: block; margin: auto;" />
 
 ### Software
 
 #### Python setup
 
-Pythonのセットアップは`uv`により行う。
+To setup the python environment, use uv:
 
 ```bash
 cd pocket-f9p
@@ -122,12 +143,11 @@ uv sync
 
 #### XIAO ESP32C
 
-##### Firmwareの書き込み
+##### Write Firmware
 
-1. **Firmwareのダウンロード:** [MicroPython ESP32-C3](https://micropython.org/download/ESP32_GENERIC_C3/)より、Firmwareをダウンロードする。
-ダウンロード後、本ディレクトリに移動する。
-2. **Flashの消去:** 上記サイトの`Installation instructions`を参考に、まず`erase-flash`を行う。
-3. **Firmwareの書込み:** その後、先の手順でダウンロードしたFirmwareを`write-flash`する。
+1. **Download Firmware:** Download firmware from: [MicroPython ESP32-C3](https://micropython.org/download/ESP32_GENERIC_C3/), and move it to this directory
+2. **Erase Flash:** Erase the flash by `erase-flash` option
+3. **Write Firmware:** Then, write the binary which is downloaded in step 1 by `write-flash` option.
 
 ###### Erase Flash
 
@@ -172,17 +192,17 @@ Hash of data verified.
 Hard resetting via RTS pin...
 ```
 
-##### Scriptの書き込み
+##### Write Script
 
-MicroPythonのFirmwareを書込み後、次にスマートフォン／F9PをブリッヂするためのScriptをXIAOに書き込む。
+After firmware writing, let's move on to the writing the application.
 
-1. **Extensionのインストール:** MARKETPLACEより[MicroPico`](https://marketplace.visualstudio.com/items?itemName=paulober.pico-w-go)をインストールする。
-2. **XIAOとPCの接続:** USBケーブルでPCとXIAOを接続後、`VS Code`のコマンドパレットで`Shift + >MicroPico: Connect`を実行する。
-3. **Scriptの書き込み:** [main.py](src/pocket_f9p/main.py)を開き、その状態から再度コマンドパレットを開き、`Shift + >MicroPico: Upload file to pico`を実行しXIAOにスクリプトをアップロードする。
+1. **Install Extension:** Install [MicroPico`](https://marketplace.visualstudio.com/items?itemName=paulober.pico-w-go) from MARKETPLACE
+2. **Connect XIAO and Computer:** Connect XIAO and your computer with USB cable, then execute `Shift + >MicroPico: Connect` via `VS Code` command palette
+3. **Write Script:** Open [main.py](src/pocket_f9p/main.py), then execute `Shift + >MicroPico: Upload file to pico` via command palette to upload the script to XIAO
 
 #### u-blox F9P
 
-`u-blox F9P`のポート設定は以下のとおり。
+The ports settings of F9P are as follows:
 
 Target  |Protocol in            |Protocol out           |Baudrate   |Dest.
 --------|-----------------------|-----------------------|-----------|-----
@@ -190,67 +210,68 @@ UART1   |0+1+5 - UBX+NMEA+RTCM3 |0+1+5 - UBX+NMEA+RTCM3 |115200     |Logger
 UART2   |0+1+5 - UBX+NMEA+RTCM3 |**1 - NMEA**           |**38400**  |XIAO
 
 > [!NOTE]
-> - XIAOファームウェアは**NMEA出力のみ**に対応しています。
-> - UART2の`Protocol out`は`1 - NMEA`**のみ**に設定してください。
->   - `0+1+5 - UBX+NMEA+RTCM3`等を設定しても問題はありませんが、フルコンステレーションの場合1秒以内のデータ転送は難しいと考えられます。
-> - ボーレートは38400bpsを推奨しますが、ファームウェアが自動検出します（9600/38400/115200/57600/19200/230400 bps対応）。
+> - Our firmware supports **NMEA output only**
+> - Set `1 - NMEA` for UART2 protocol out
+>   - It is okay to set `0+1+5 - UBX+NMEA+RTCM3` for UART2 protocol out, however it's difficult to forward the whole data within 1 sec when using full GNSS constellations
+> - We recommended the baudrate 38400bps, but the firmware can detect it automatically (supports 9600/38400/115200/57600/19200/230400 bps)
 
-### 📱 Setup (Smartphone)
+### 📱 Setup (Smartphone, Android)
 
-#### Application (Android)
+#### Application (GNSS Master)
 
-本開発では[GNSS Master](https://www.gnssmaster.com/)を用いる。
+We utilized [GNSS Master](https://www.gnssmaster.com/) for this development.
 
 ##### GNSS Receiver Connection Setting
 
-`GNSS Receiver Connection`右側の⚙️をタップし、以下を設定する。
+Tap ⚙️ on the right side of `GNSS Receiver Connection`, and set the following:
 
 - **Mode:** `Bluetooth LE`
-- **Paired Devices:** `Pocket F9P`
+- **Paired Devices:** `Pocket-F9P`
 
 ##### Correction Input Setting
 
-`Correction Input`右側の⚙️をタップし、必要に応じて補強情報データ配信元を設定する。
+Tap ⚙️ on the right side of `Correction Input`, and setting it if needed.
 
 ##### Receiver Data Output Setting
 
-`Receiver Data Output`右側の⚙️をタップし、必要に応じて受信機データを再配信する設定を行う（TCP Server等）。
+Tap ⚙️ on the right side of `Receiver Data Output`, and setting it if needed.
 
-#### Developer Mode
+#### Other settings (Developer Mode, etc.)
 
-- **開発者向けオプションの有効化:** [デバイスの開発者向けオプションを設定する](https://developer.android.com/studio/debug/dev-options?hl=ja)を参考に`開発者向けオプション`を有効にする
-- **仮の現在地情報アプリの設定:** `⚙️設定 > システム > 開発者向けオプション > 場所`から、`仮の現在地情報アプリ`をタップし、`GNSS Master`を設定する
+- **Enabling Developer mode:** see [Configure on-device developer options](https://developer.android.com/studio/debug/dev-options?hl=en)
+- **Select mock location app:** see [Debugging](https://developer.android.com/studio/debug/dev-options?hl=en#debugging)
 
 ## 📖 How to use?
 
-### 基本的な使い方
+### Basic usage
 
-1. **受信機の電源を入れる:** 
-    - バッテリー駆動の場合: `HWスイッチ`を`ON`にする
-    - USBバスパワー駆動の場合: `XIAO`のUSBポートに電源供給する（同時にバッテリー充電したい場合は、`HWスイッチ`を`ON`にする）
-2. **GNSS Masterを起動し、受信機と接続する:** 設定については[GNSS Receiver Connection Setting](#gnss-receiver-connection-setting)を参照
-3. **GNSS MasterにてCorrection Inputを接続する（補正が必要な場合）:** 設定については[Correction Input Setting](#correction-input-setting)を参照
+1. **Power on the receiver:** 
+    - Battery Driven: Switch `ON` the HW Switch
+    - Using USB Bus Power: Connect the usb cable to the `XIAO`'s port, if you want to charge the battery, you should switch `ON` the HW switch as well
+2. **Start GNSS Master and Connect to the receiver:** see [GNSS Receiver Connection Setting](#gnss-receiver-connection-setting)
+3. **Connect the Correction Input (If needed):** see [Correction Input Setting](#correction-input-setting)
 
 ## 🧠 LLM Utilization
 
-- 設計検討: Gemini
-- コーディング補助: Claude (Anthropic)
+- Design Review: Gemini
+- Coding Assistant: Claude (Anthropic)
 
 ## 🤝 Contributing
 
-バグ報告、機能提案、プルリクエストを歓迎します。
+We welcome bug reports, feature suggestions and pull requests.
 
-1.  Issueを立てて問題を報告してください。
-2.  プルリクエストを送る際は、変更内容を明確に記述してください。
+1.  Please create an issue to report the problem.
+2.  When submitting the PR, clearly describe the changes made.
 
 ## ⚠️ Known Issues & Limitations
 
-- **プロトタイプ品質:** 本ソフトウェアはプロトタイプであり、長時間の連続稼働における堅牢性（例外処理や自動再接続）は十分に検証されていません。
-- **アプリ依存性:** `GNSS Master`アプリとの接続は確認済みですが、他のNTRIPアプリ（特にBLE NUS非対応アプリ）では動作しない可能性があります。
-- **NTRIP補正:** NTRIP等を使用した補正については現状未検証です。
-- **GNSS Status (GNSS Master)での表示:** 以下の事象を確認していますが、アプリ側の問題か受信機側の問題かについては未確認です。
-    - 時刻表示が数十秒に1度しか更新されない
-    - `No NMEA RMC`が表示されることがある
+- **Prototype Quality:** This HW and SW are prototype, therefore we have not performed sufficient verification
+    - **XIAO Antenna Exposure:** The XIAO's BLE antenna and its cable are exposed on the outside of the case. This poses a risk to long-term robustness and potential snagging of the cable. (✅ `v0.2.0`: Add exoskeleton frame)
+- **Application Dependency:** We checked the application compatibility only with `GNSS Master`
+- **NTRIP Correction:** We have not verified the NTRIP correction
+- **Regarding GNSS Status view in GNSS Master:** We confirmed the following issues, but we do not verify the further details:
+    - The UTC time does not update for several seconds
+    - Sometimes `No NMEA RMC` is shown
 
 ## 📄 License
 
