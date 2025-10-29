@@ -105,7 +105,7 @@ graph LR
 #### Assembly
 
 > [!CAUTION]
-> 先にXIAOの[Firmware書き込み](#write-firmware)を済ませることをおすすめします。
+> 先にXIAOの[Firmware書き込み](#firmwareの書き込み)を済ませることをおすすめします。
 
 <img src="images/assembly.png" width="60%" style="display: block; margin: auto;" />
 
@@ -246,6 +246,7 @@ UART2   |0+1+5 - UBX+NMEA+RTCM3 |**1 - NMEA**           |**38400**  |XIAO
 ## ⚠️ Known Issues & Limitations
 
 - **プロトタイプ品質:** 本ソフトウェアはプロトタイプであり、長時間の連続稼働における堅牢性（例外処理や自動再接続）は十分に検証されていません。
+    - **XIAO Antennaに関する課題:** アンテナ・RFケーブルが外部に露出しており、堅牢性に課題があります。
 - **アプリ依存性:** `GNSS Master`アプリとの接続は確認済みですが、他のNTRIPアプリ（特にBLE NUS非対応アプリ）では動作しない可能性があります。
 - **NTRIP補正:** NTRIP等を使用した補正については現状未検証です。
 - **GNSS Status (GNSS Master)での表示:** 以下の事象を確認していますが、アプリ側の問題か受信機側の問題かについては未確認です。
