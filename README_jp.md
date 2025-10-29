@@ -50,15 +50,13 @@ M3 Nut                                                                          
 
 [case](case/)ディレクトリ内にある3つのコンポーネントを3Dプリントする。
 
-**v0.1.0 (Standard)**
-最小構成。*注： XIAOのBLEアンテナが露出した状態です。*
+**v0.1.0 (Standard)**: 最小構成。*注： XIAOのBLEアンテナが露出した状態。*
 
 - [Pocket-F9P-Top.3mf](case/Pocket-F9P-Top.3mf): ケース上段（F9P基板）
 - [Pocket-F9P-Center.3mf](case/Pocket-F9P-Center.3mf): ケース中央
 - [Pocket-F9P-Bottom.3mf](case/Pocket-F9P-Bottom.3mf): ケース下段（ロガー、XIAO、バッテリー、HW SW）
 
-**v0.2.0 (with Exoskeleton)**
-推奨。XIAOのBLEアンテナを守る外骨格フレームを追加しています。
+**v0.2.0 (with Exoskeleton)**: **推奨**。XIAOのBLEアンテナを守る外骨格フレームを追加。
 
 - [Pocket-F9P-Top.3mf](case/Pocket-F9P-Top.3mf): ケース上段（F9P基板）
 - [Pocket-F9P-Center.3mf](case/Pocket-F9P-Center.3mf): ケース中央
