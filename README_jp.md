@@ -7,7 +7,7 @@
 
 <img src="images/receiver.jpg" width="60%" style="display: block; margin: auto;" />
 
-[🇬🇧 README](README_jp.md)
+[🇬🇧 README](README.md)
 
 ## 🚀　Overview
 
