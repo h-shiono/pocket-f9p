@@ -1,11 +1,13 @@
-# 📡 Pocket F9P
+# 📡 Pocket-F9P
 
-`Pocket F9P`は`u-blox`社製の小型高精度GNSS受信機を手軽に、便利に持ち運べるように設計したコンパクト受信機です。
+`Pocket-F9P`は`u-blox`社製の小型高精度GNSS受信機を手軽に、便利に持ち運べるように設計したコンパクト受信機です。
 
 > [!IMPORTANT]
-> 本リポジトリの内容を用いて行う一切の行為、被った損害・損失に対しては、一切の責任を負いかねます。 
+> ⚠️ 本リポジトリの内容を用いて行う一切の行為、被った損害・損失に対しては、一切の責任を負いかねます。 
 
-<img src="images/receiver.jpg" width="80%" style="display: block; margin: auto;" />
+<img src="images/receiver.jpg" width="60%" style="display: block; margin: auto;" />
+
+[🇬🇧 README](README_jp.md)
 
 ## 🚀　Overview
 
@@ -38,6 +40,8 @@ Parts                                                                           
 SMA to U.FL Cable                                                                                                           |1  |SMA <-> U.FL変換
 [NKK Switches SS-12SDP2](https://www.nkkswitches.co.jp/product/detailed/SS-12SDP2.html)                                     |1  |HWスイッチ
 M3 x 5                                                                                                                      |2  |ケース固定用
+M3 x 25                                                                                                                     |4  |**オプション（推奨）** 外骨格フレーム固定用
+M3 Nut                                                                                                                      |4  |**オプション（推奨）** 外骨格フレーム固定用
 
 > [!NOTE]
 > 実際の組み立てには[SwitchScience ZED-F9P搭載GPS-RTKピッチ変換基板](https://www.switch-science.com/products/10511?_pos=4&_sid=bce749730&_ss=r)を使用しました。念のため。
@@ -46,9 +50,25 @@ M3 x 5                                                                          
 
 [case](case/)ディレクトリ内にある3つのコンポーネントを3Dプリントする。
 
-- [Pocket-F9P-Bottom.3mf](case/Pocket-F9P-Bottom.3mf): ケース上段（F9P基板）
+**v0.1.0 (Standard)**
+最小構成。*注： XIAOのBLEアンテナが露出した状態です。*
+
+- [Pocket-F9P-Top.3mf](case/Pocket-F9P-Top.3mf): ケース上段（F9P基板）
 - [Pocket-F9P-Center.3mf](case/Pocket-F9P-Center.3mf): ケース中央
-- [Pocket-F9P-Top.3mf](case/Pocket-F9P-Top.3mf): ケース下段（ロガー、XIAO、バッテリー、HW SW）
+- [Pocket-F9P-Bottom.3mf](case/Pocket-F9P-Bottom.3mf): ケース下段（ロガー、XIAO、バッテリー、HW SW）
+
+**v0.2.0 (with Exoskeleton)**
+推奨。XIAOのBLEアンテナを守る外骨格フレームを追加しています。
+
+- [Pocket-F9P-Top.3mf](case/Pocket-F9P-Top.3mf): ケース上段（F9P基板）
+- [Pocket-F9P-Center.3mf](case/Pocket-F9P-Center.3mf): ケース中央
+- [Pocket-F9P-Bottom.3mf](case/Pocket-F9P-Bottom.3mf): ケース下段（ロガー、XIAO、バッテリー、HW SW）
+- [Exoskeleton-Top.3mf](case/Exoskeleton-Top.3mf)
+- [Exoskeleton-Bottom.3mf](case/Exoskeleton-Bottom.3mf)
+
+<img src="images/receiver-w-exoskeleton-top.jpg" width="60%" style="display: block; margin: auto;" />
+<br>
+<img src="images/receiver-w-exoskeleton-bottom.jpg" width="60%" style="display: block; margin: auto;" />
 
 ##### Wiring
 
@@ -57,7 +77,7 @@ M3 x 5                                                                          
 **Block Diagram**
 
 ```mermaid
-graph LR
+graph TD
 
     sw[HW Switch]
 
@@ -206,7 +226,7 @@ UART2   |0+1+5 - UBX+NMEA+RTCM3 |**1 - NMEA**           |**38400**  |XIAO
 `GNSS Receiver Connection`右側の⚙️をタップし、以下を設定する。
 
 - **Mode:** `Bluetooth LE`
-- **Paired Devices:** `Pocket F9P`
+- **Paired Devices:** `Pocket-F9P`
 
 ##### Correction Input Setting
 
@@ -246,7 +266,7 @@ UART2   |0+1+5 - UBX+NMEA+RTCM3 |**1 - NMEA**           |**38400**  |XIAO
 ## ⚠️ Known Issues & Limitations
 
 - **プロトタイプ品質:** 本ソフトウェアはプロトタイプであり、長時間の連続稼働における堅牢性（例外処理や自動再接続）は十分に検証されていません。
-    - **XIAO Antennaに関する課題:** アンテナ・RFケーブルが外部に露出しており、堅牢性に課題があります。
+    - **XIAO Antennaに関する課題:** アンテナ・RFケーブルが外部に露出しており、堅牢性に課題があります。（✅ `v0.2.0`：外骨格フレームを追加）
 - **アプリ依存性:** `GNSS Master`アプリとの接続は確認済みですが、他のNTRIPアプリ（特にBLE NUS非対応アプリ）では動作しない可能性があります。
 - **NTRIP補正:** NTRIP等を使用した補正については現状未検証です。
 - **GNSS Status (GNSS Master)での表示:** 以下の事象を確認していますが、アプリ側の問題か受信機側の問題かについては未確認です。

@@ -5,7 +5,9 @@
 > [!IMPORTANT]
 > ⚠️ We shall not be held responsible for any damage or loss incurred as a result of actions taken based on the information contained in this repository. 
 
-<img src="images/receiver.jpg" width="80%" style="display: block; margin: auto;" />
+<img src="images/receiver.jpg" width="60%" style="display: block; margin: auto;" />
+
+[🇯🇵 README](README_jp.md)
 
 ## 🚀　Overview
 
@@ -39,17 +41,35 @@ Parts                                                                           
 SMA to U.FL Cable                                                                                                           |1  |SMA <-> U.FL Conversion
 [NKK Switches SS-12SDP2](https://www.nkkswitches.co.jp/product/detailed/SS-12SDP2.html)                                     |1  |HW Switch
 M3 x 5                                                                                                                      |2  |To secure the case
+M3 x 25                                                                                                                     |4  |**Optional, Recommended** To secure the exoskeleton
+M3 Nut                                                                                                                      |4  |**Optional, Recommended** To secure the exoskeleton
 
 > [!NOTE]
 > We utilized [SwitchScience ZED-F9P搭載GPS-RTKピッチ変換基板](https://www.switch-science.com/products/10511?_pos=4&_sid=bce749730&_ss=r) receiver for the prototyping.
 
 #### Print the case
 
-Print three components (see [case](case/)):
+This repository provides two case options:
+
+**v0.1.0 (Standard)**
+The original compact case. *Note: The BLE antenna is exposed.*
 
 - [Pocket-F9P-Top.3mf](case/Pocket-F9P-Top.3mf): Upper (F9P)
 - [Pocket-F9P-Center.3mf](case/Pocket-F9P-Center.3mf): Center frame
 - [Pocket-F9P-Bottom.3mf](case/Pocket-F9P-Bottom.3mf): Bottom (Logger, XIAO, Battery, HW Switch)
+
+**v0.2.0 (with Exoskeleton)**
+Recommended. Includes an external frame to protect the BLE antenna and add robustness.
+
+- [Pocket-F9P-Top.3mf](case/Pocket-F9P-Top.3mf): Upper (F9P)
+- [Pocket-F9P-Center.3mf](case/Pocket-F9P-Center.3mf): Center frame
+- [Pocket-F9P-Bottom.3mf](case/Pocket-F9P-Bottom.3mf): Bottom (Logger, XIAO, Battery, HW Switch)
+- [Exoskeleton-Top.3mf](case/Exoskeleton-Top.3mf)
+- [Exoskeleton-Bottom.3mf](case/Exoskeleton-Bottom.3mf)
+
+<img src="images/receiver-w-exoskeleton-top.jpg" width="60%" style="display: block; margin: auto;" />
+<br>
+<img src="images/receiver-w-exoskeleton-bottom.jpg" width="60%" style="display: block; margin: auto;" />
 
 ##### Wiring
 
@@ -58,7 +78,7 @@ Please refer to the following diagram and figure for wiring.
 **Block Diagram**
 
 ```mermaid
-graph LR
+graph TD
 
     sw[HW Switch]
 
@@ -246,7 +266,7 @@ We welcome bug reports, feature suggestions and pull requests.
 ## ⚠️ Known Issues & Limitations
 
 - **Prototype Quality:** This HW and SW are prototype, therefore we have not performed sufficient verification
-    - **XIAO Antenna Exposure:** The XIAO's BLE antenna and its cable are exposed on the outside of the case. This poses a risk to long-term robustness and potential snagging of the cable.
+    - **XIAO Antenna Exposure:** The XIAO's BLE antenna and its cable are exposed on the outside of the case. This poses a risk to long-term robustness and potential snagging of the cable. (✅ `v0.2.0`: Add exoskeleton frame)
 - **Application Dependency:** We checked the application compatibility only with `GNSS Master`
 - **NTRIP Correction:** We have not verified the NTRIP correction
 - **Regarding GNSS Status view in GNSS Master:** We confirmed the following issues, but we do not verify the further details:
