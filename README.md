@@ -246,7 +246,7 @@ Tap ⚙️ on the right side of `Receiver Data Output`, and setting it if needed
 ### Basic usage
 
 1. **Power on the receiver:** 
-    - Battery Driven: Swicth `ON` the HW Switch
+    - Battery Driven: Switch `ON` the HW Switch
     - Using USB Bus Power: Connect the usb cable to the `XIAO`'s port, if you want to charge the battery, you should switch `ON` the HW switch as well
 2. **Start GNSS Master and Connect to the receiver:** see [GNSS Receiver Connection Setting](#gnss-receiver-connection-setting)
 3. **Connect the Correction Input (If needed):** see [Correction Input Setting](#correction-input-setting)
